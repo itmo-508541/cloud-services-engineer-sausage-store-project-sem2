@@ -52,6 +52,7 @@ jobs:
             build-args: |
               VERSION=${{ github.sha }}
             cache-from: type=registry,ref=itmo508541/sausage-backend:latest
+            cache-to: type=registry,ref=itmo508541/sausage-backend:cache,mode=max
         - name: Push Frontend to DockerHub
           uses: docker/build-push-action@v4
           with:
@@ -59,6 +60,7 @@ jobs:
             push: true
             tags: itmo508541/sausage-frontend:latest
             cache-from: type=registry,ref=itmo508541/sausage-frontend:latest
+            cache-to: type=registry,ref=itmo508541/sausage-frontend:cache,mode=max
         - name: Push Backend-report to DockerHub
           uses: docker/build-push-action@v4
           with:
@@ -66,6 +68,7 @@ jobs:
             push: true
             tags: itmo508541/sausage-backend-report:latest
             cache-from: type=registry,ref=itmo508541/sausage-backend-report:latest
+            cache-to: type=registry,ref=itmo508541/sausage-backend-report:cache,mode=max
 
   # # Упаковываем helm-чарт и пушим его в Nexus
   # add_helm_chart_to_nexus:
