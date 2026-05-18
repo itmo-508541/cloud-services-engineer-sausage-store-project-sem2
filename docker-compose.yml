@@ -22,6 +22,25 @@ services:
     networks:
       - backend
 
+  backend-report:
+    build:
+      context: ./backend-report/
+      dockerfile: Dockerfile
+    environment:
+      - PORT=8080
+      - DB=mongodb://mongo:27017/sausage-store
+    expose:
+      - "8080"
+    networks:
+      - backend
+
+  mongo:
+    image: mongo:7.0
+    ports:
+      - "27017:27017"
+    networks:
+      - backend
+
 networks:
   backend:
 
