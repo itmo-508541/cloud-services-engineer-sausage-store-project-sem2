@@ -12,7 +12,7 @@ COPY *.xml ./
 RUN mvn package -Dversion.application=${VERSION}
 
 # release
-FROM openjdk:16-jdk-alpine
+FROM openjdk:16-ea-jdk-alpine
 ARG VERSION=${VERSION}
 WORKDIR /app
 # создаём пользователя jaruser
