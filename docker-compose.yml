@@ -25,11 +25,16 @@ services:
       mongodb:
         condition: service_started
     environment:
-      SPRING_DATASOURCE_URL: "jdbc:postgresql://${POSTGRES_HOST}:5432/${POSTGRES_DB}"
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://${SPRING_DATASOURCE_USERNAME}:${SPRING_DATASOURCE_PASSWORD}@postgresql:5432/${SPRING_DATASOURCE_DATABASE}"
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_DATA_MONGODB_URI: "mongodb://${SPRING_DATA_MONGODB_USERNAME}:${SPRING_DATA_MONGODB_PASSWORD}@mongodb:27017/sausage-store"
       SPRING_CLOUD_VAULT_ENABLED: "false"
-      SPRING_DATA_MONGODB_URI: "mongodb://mongodb:27017/sausage-store"
+      #SPRING_CONFIG_IMPORT: "vault://kv/sausage-store"
+      #SPRING_CLOUD_VAULT_HOST: "vault"
+      #SPRING_CLOUD_VAULT_PORT: "8200"
+      #SPRING_CLOUD_VAULT_SCHEME: "http"
+      #SPRING_CLOUD_VAULT_TOKEN: "${VAULT_TOKEN}"      
 
   postgresql:
     image: postgres:16
@@ -38,11 +43,11 @@ services:
     networks:
       - backend
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${SPRING_DATASOURCE_USERNAME}
+      POSTGRES_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      POSTGRES_DB: ${SPRING_DATASOURCE_DATABASE}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready", "-U", "${POSTGRES_USER}", "-d", "${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready", "-U", "${SPRING_DATASOURCE_USERNAME}", "-d", "${SPRING_DATASOURCE_DATABASE}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -51,7 +56,7 @@ services:
     image: itmo508541/sausage-backend-report:latest
     environment:
       - PORT=8080
-      - DB=mongodb://mongo:27017/sausage-store
+      - DB=mongodb://${SPRING_DATA_MONGODB_USERNAME}:${SPRING_DATA_MONGODB_PASSWORD}@mongodb:27017/sausage-store
     expose:
       - "8080"
     networks:
@@ -63,6 +68,9 @@ services:
       - "27017:27017"
     networks:
       - backend
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${SPRING_DATA_MONGODB_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${SPRING_DATA_MONGODB_PASSWORD}
 
 networks:
   backend:
