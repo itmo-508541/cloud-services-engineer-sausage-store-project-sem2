@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgresql
+spec:
+  serviceName: postgresql
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgresql
+  template:
+    metadata:
+      labels:
+        app: postgresql
+    spec:
+      initContainers:
+        - name: postgresql-vault-secrets
+          image: {{ .Values.global.vault.image }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          env:
+            - name: VAULT_ADDR
+              value: {{ .Values.global.vault.addr | quote }}
+            - name: VAULT_TOKEN
+              value: {{ .Values.global.vault.token | quote }}
+          {{- with .Values.global.vault.resources.container }}
+          resources:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: postgresql-secrets
+              mountPath: {{ .Values.postgresql.secrets }}
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              vault status
+              vault kv get -mount=kv -field=spring.datasource.username sausage-store > {{ .Values.postgresql.secrets }}/postgres-username
+              vault kv get -mount=kv -field=spring.datasource.password sausage-store > {{ .Values.postgresql.secrets }}/postgres-password
+              vault kv get -mount=kv -field=spring.datasource.database sausage-store > {{ .Values.postgresql.secrets }}/postgres-database
+      containers:
+        - name: postgresql
+          image: {{ .Values.postgresql.image }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          env:
+            - name: POSTGRES_PASSWORD_FILE
+              value: {{ .Values.postgresql.secrets }}/postgres-password
+            - name: POSTGRES_USER_FILE
+              value: {{ .Values.postgresql.secrets }}/postgres-username
+            - name: POSTGRES_DB_FILE
+              value: {{ .Values.postgresql.secrets }}/postgres-database
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          ports:
+            - containerPort: {{ .Values.postgresql.containerPort }}
+          {{- with .Values.postgresql.resources.container }}
+          resources:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: postgresql-data
+              mountPath: /var/lib/postgresql/data
+            - name: postgresql-secrets
+              mountPath: {{ .Values.postgresql.secrets }}
+              readOnly: true
+      volumes:
+        - name: postgresql-secrets
+          emptyDir: {}
+  volumeClaimTemplates:
+    - metadata:
+        name: postgresql-data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+      {{- with .Values.postgresql.resources.data }}
+        resources:
+          {{ toYaml . | nindent 10 }}
+      {{- end }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgresql
+  labels:
+    app: postgresql
+spec:
+  ports:
+    - port: {{ .Values.postgresql.containerPort }}
+      targetPort: {{ .Values.postgresql.containerPort }}
+  selector:
+    app: postgresql
+  clusterIP: None

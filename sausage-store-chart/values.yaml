@@ -78,7 +78,20 @@ backend-report:
 
 infra:
   postgresql:
-  ### Опишите необходимые переменные для развертывания PostgresQL в кластере Kubernetes
+    image: postgres:16
+    secrets: "/run/secrets"
+    containerPort: 5432
+    resources:
+      container:
+        requests:
+          memory: "128Mi"
+          cpu: "200m"
+        limits:
+          memory: "256Mi"
+          cpu: "300m"
+      data:
+        requests:
+          storage: 1Gi
   mongodb:
     image: mongo:7.0
     secrets: "/run/secrets"

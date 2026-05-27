@@ -14,62 +14,62 @@ spec:
         app: mongodb
     spec:
       initContainers:
-      - name: mongodb-vault-secrets
-        image: {{ .Values.global.vault.image }}
-        imagePullPolicy: {{ .Values.global.imagePullPolicy }}
-        env:
-          - name: VAULT_ADDR
-            value: {{ .Values.global.vault.addr | quote }}
-          - name: VAULT_TOKEN
-            value: {{ .Values.global.vault.token | quote }}
-        {{- with .Values.global.vault.resources.container }}
-        resources:
-          {{ toYaml . | nindent 10 }}
-        {{- end }}
-        volumeMounts:
+        - name: mongodb-vault-secrets
+          image: {{ .Values.global.vault.image }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          env:
+            - name: VAULT_ADDR
+              value: {{ .Values.global.vault.addr | quote }}
+            - name: VAULT_TOKEN
+              value: {{ .Values.global.vault.token | quote }}
+          {{- with .Values.global.vault.resources.container }}
+          resources:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: mongodb-secrets
+              mountPath: {{ .Values.mongodb.secrets }}
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              vault status
+              vault kv get -mount=kv -field=spring.data.mongodb.username sausage-store > {{ .Values.mongodb.secrets }}/mongo-root-username
+              vault kv get -mount=kv -field=spring.data.mongodb.password sausage-store > {{ .Values.mongodb.secrets }}/mongo-root-password
+      containers:
+        - name: mongodb
+          image: {{ .Values.mongodb.image }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME_FILE
+              value: "{{ .Values.mongodb.secrets }}/mongo-root-username"
+            - name: MONGO_INITDB_ROOT_PASSWORD_FILE
+              value: "{{ .Values.mongodb.secrets }}/mongo-root-password"
+          ports:
+          - containerPort: {{ .Values.mongodb.containerPort }}
+          {{- with .Values.mongodb.resources.container }}
+          resources:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+          - name: mongodb-data
+            mountPath: /data/db
           - name: mongodb-secrets
             mountPath: {{ .Values.mongodb.secrets }}
-        command:
-          - sh
-          - -c
-          - |
-            set -e
-            vault status
-            vault kv get -mount=kv -field=spring.data.mongodb.username sausage-store > {{ .Values.mongodb.secrets }}/mongo-root-username
-            vault kv get -mount=kv -field=spring.data.mongodb.password sausage-store > {{ .Values.mongodb.secrets }}/mongo-root-password
-      containers:
-      - name: mongodb
-        image: {{ .Values.mongodb.image }}
-        imagePullPolicy: {{ .Values.global.imagePullPolicy }}
-        env:
-          - name: MONGO_INITDB_ROOT_USERNAME_FILE
-            value: "{{ .Values.mongodb.secrets }}/mongo-root-username"
-          - name: MONGO_INITDB_ROOT_PASSWORD_FILE
-            value: "{{ .Values.mongodb.secrets }}/mongo-root-password"
-        ports:
-        - containerPort: {{ .Values.mongodb.containerPort }}
-        {{- with .Values.mongodb.resources.container }}
-        resources:
-          {{ toYaml . | nindent 10 }}
-        {{- end }}
-        volumeMounts:
-        - name: mongodb-data
-          mountPath: /data/db
-        - name: mongodb-secrets
-          mountPath: {{ .Values.mongodb.secrets }}
-          readOnly: true
+            readOnly: true
       volumes:
         - name: mongodb-secrets
           emptyDir: {}
   volumeClaimTemplates:
-  - metadata:
-      name: mongodb-data
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      {{- with .Values.mongodb.resources.data }}
-      resources:
-        {{ toYaml . | nindent 8 }}
-      {{- end }}
+    - metadata:
+        name: mongodb-data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        {{- with .Values.mongodb.resources.data }}
+        resources:
+          {{ toYaml . | nindent 10 }}
+        {{- end }}
 
 ---
 apiVersion: v1
