@@ -4,6 +4,8 @@ global:
   vault:
     image: "hashicorp/vault:1.21.0"
     addr: http://vault:8200
+    spring:
+      import: "vault://kv/sausage-store"
     token: ""
     resources:
       container:
@@ -34,43 +36,59 @@ frontend:
       cpu: "100m"
     limits:
       memory: "128Mi"
-      cpu: "1"
+      cpu: "800m"
   nginxConf: nginx.conf
 
 backend:
+  image: itmo508541/sausage-backend:latest
+  containerPort: 8080
   annotations:
     path: /actuator/prometheus
     port: "8080"
     scrape: "true"
   env:
-    postgresUri: jdbc:postgresql://postgresql:5432/sausage-store
-    postgresUser: store
-    postgresPassword: storepassword
-    reportPath: /logs/reports
-    logPath: /logs
-  service:
-    port: 8080
+    reportPath: /logs
   revisionHistoryLimit: 15
   replicas: 1
   strategy:
-  ### Опишите стратегию RollingUpdate для бэкенда
-  image: YOUR_DOCKERHUB/sausage-backend:latest
-  imagePullPolicy: Always
+    type: RollingUpdate
   resources:
-    requests:
-      memory: "256Mi"
-      cpu: "100m"
-    limits:
-      memory: "512Mi"
-      cpu: "1"
-  containerPort: 8080
+    container:
+      requests:
+        memory: "256Mi"
+        cpu: "100m"
+      limits:
+        memory: "512Mi"
+        cpu: "800m"
+  readinessProbe:
+    httpGet:
+      path: /actuator/health
+      port: backend
+    initialDelaySeconds: 45
+    periodSeconds: 10
   livenessProbe:
-  ### Опишите LivenessProbe для бэкенда
+    httpGet:
+      path: /actuator/health
+      port: backend
+    initialDelaySeconds: 90
+    periodSeconds: 20
   vpa:
-    updatePolicy: "InPlaceOrRecreate"
-  ### Опишите VPA для бэкенда
+    updatePolicy:
+      updateMode: "InPlaceOrRecreate"
+    resourcePolicy:
+      containerPolicies:
+        - containerName: "backend"
+          minAllowed:
+            memory: "256Mi"
+            cpu: "100m"
+          maxAllowed:
+            memory: "1Gi"
+            cpu: "1600m"
+          controlledResources:
+            - memory
+            - cpu
+          controlledValues: RequestsAndLimits
 
-### Приложение должно использовать стратегию Recreate
 ### Опишите HPA для backend-report
 backend-report:
   image: itmo508541/sausage-backend-report:latest
