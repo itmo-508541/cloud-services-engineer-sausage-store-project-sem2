@@ -5,50 +5,44 @@ on:
     branches:
       - main
 
-env:
-  KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
-  VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
-
 jobs:
-  # Сборка и пуш образов в докерхаб:
-  build_and_push_to_docker_hub:
-    name: Push Docker image to DockerHub
+  build_and_push_to_docker_hub_backend:
+    name: Backend Docker Image
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
-        # Получение исходного кода из репозитория:
         uses: actions/checkout@v3
       - name: Set up Docker Buildx
-        # Установка сборщика контейнеров Docker:
         uses: docker/setup-buildx-action@v2
       - name: Login to Docker
-        # Авторизация на Docker Hub:
         uses: docker/login-action@v2
-        # При помощи with передаём в action параметры username и password:
         with:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-          # Хорошо ли держать логин и пароль прямо в коде workflow?
-          # Нет, это нехорошо. Хранить пароль надо в Secrets.
       - name: Push Backend to DockerHub
-        # Одновременный билд и пуш образа в Docker Hub:
         uses: docker/build-push-action@v4
         with:
-          # Параметр context: ./backend/ указывает, что нужный Dockerfile
-          # находится в ./backend/
           context: ./backend/
-          # Параметр push: true указывает, что образ нужно не только собрать,
-          # но и отправить на Docker Hub:
           push: true
-          # В параметре tags задаётся название и тег для образа.
-          # Для каждого пересобранного образа
-          # устанавливаем тег latest, чтобы потом
-          # на сервере и в docker-compose.yml не указывать версию образа:
           tags: itmo508541/sausage-backend:latest
           build-args: |
             VERSION=${{ github.sha }}
           cache-from: type=registry,ref=itmo508541/sausage-backend:latest
           cache-to: type=registry,ref=itmo508541/sausage-backend:cache,mode=max
+
+  build_and_push_to_docker_hub_frontend:
+    name: Frontend Docker Image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Login to Docker
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Push Frontend to DockerHub
         uses: docker/build-push-action@v4
         with:
@@ -57,6 +51,20 @@ jobs:
           tags: itmo508541/sausage-frontend:latest
           cache-from: type=registry,ref=itmo508541/sausage-frontend:latest
           cache-to: type=registry,ref=itmo508541/sausage-frontend:cache,mode=max
+
+  build_and_push_to_docker_hub_backend_report:
+    name: Backend-Report Docker Image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Login to Docker
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Push Backend-report to DockerHub
         uses: docker/build-push-action@v4
         with:
@@ -70,7 +78,10 @@ jobs:
   add_helm_chart_to_nexus:
     name: Add Helm Chart To Nexus
     runs-on: ubuntu-latest
-    needs: build_and_push_to_docker_hub
+    needs:
+      - build_and_push_to_docker_hub_backend
+      - build_and_push_to_docker_hub_frontend
+      - build_and_push_to_docker_hub_backend_report
     env:
       HELM_REPO_USERNAME: ${{ secrets.NEXUS_HELM_REPO_USER }}
       HELM_REPO_PASSWORD: ${{ secrets.NEXUS_HELM_REPO_PASSWORD }}
@@ -106,10 +117,10 @@ jobs:
       - name: Setup kubeconfig
         run: |
           mkdir -p ~/.kube
-          echo "${{ env.KUBE_CONFIG }}" > ~/.kube/config
+          echo "${{ secrets.KUBE_CONFIG }}" > ~/.kube/config
           chmod 600 ~/.kube/config
       - name: Upgrade Helm release
         run: |
-          helm repo add nexus "$NEXUS_HELM_REPO" --username "${{ secrets.NEXUS_HELM_REPO_USER }}" --password "${{ secrets.NEXUS_HELM_REPO_PASSWORD }}"
+          helm repo add nexus "${{ secrets.NEXUS_HELM_REPO }}" --username "${{ secrets.NEXUS_HELM_REPO_USER }}" --password "${{ secrets.NEXUS_HELM_REPO_PASSWORD }}"
           helm repo update
-          helm upgrade --install sausage-store nexus/sausage-store --wait --timeout 10m
+          helm upgrade --install sausage-store nexus/sausage-store --set global.vault.token='${{ secrets.VAULT_TOKEN }}' --wait --timeout 10m
