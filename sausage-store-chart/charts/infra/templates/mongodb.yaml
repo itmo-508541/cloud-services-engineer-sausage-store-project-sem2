@@ -1,3 +1,4 @@
+---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -28,24 +29,24 @@ spec:
           {{- end }}
           volumeMounts:
             - name: mongodb-secrets
-              mountPath: {{ .Values.mongodb.secrets }}
+              mountPath: {{ .Values.global.secrets }}
           command:
             - sh
             - -c
             - |
               set -e
               vault status
-              vault kv get -mount=kv -field=spring.data.mongodb.username sausage-store > {{ .Values.mongodb.secrets }}/mongo-root-username
-              vault kv get -mount=kv -field=spring.data.mongodb.password sausage-store > {{ .Values.mongodb.secrets }}/mongo-root-password
+              vault kv get -mount=kv -field=spring.data.mongodb.username sausage-store > {{ .Values.global.secrets }}/mongo-root-username
+              vault kv get -mount=kv -field=spring.data.mongodb.password sausage-store > {{ .Values.global.secrets }}/mongo-root-password
       containers:
         - name: mongodb
           image: {{ .Values.mongodb.image }}
           imagePullPolicy: {{ .Values.global.imagePullPolicy }}
           env:
             - name: MONGO_INITDB_ROOT_USERNAME_FILE
-              value: "{{ .Values.mongodb.secrets }}/mongo-root-username"
+              value: "{{ .Values.global.secrets }}/mongo-root-username"
             - name: MONGO_INITDB_ROOT_PASSWORD_FILE
-              value: "{{ .Values.mongodb.secrets }}/mongo-root-password"
+              value: "{{ .Values.global.secrets }}/mongo-root-password"
           ports:
           - containerPort: {{ .Values.mongodb.containerPort }}
           {{- with .Values.mongodb.resources.container }}
@@ -56,7 +57,7 @@ spec:
           - name: mongodb-data
             mountPath: /data/db
           - name: mongodb-secrets
-            mountPath: {{ .Values.mongodb.secrets }}
+            mountPath: {{ .Values.global.secrets }}
             readOnly: true
       volumes:
         - name: mongodb-secrets

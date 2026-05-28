@@ -1,3 +1,4 @@
+---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -28,27 +29,27 @@ spec:
           {{- end }}
           volumeMounts:
             - name: postgresql-secrets
-              mountPath: {{ .Values.postgresql.secrets }}
+              mountPath: {{ .Values.global.secrets }}
           command:
             - sh
             - -c
             - |
               set -e
               vault status
-              vault kv get -mount=kv -field=spring.datasource.username sausage-store > {{ .Values.postgresql.secrets }}/postgres-username
-              vault kv get -mount=kv -field=spring.datasource.password sausage-store > {{ .Values.postgresql.secrets }}/postgres-password
-              vault kv get -mount=kv -field=spring.datasource.database sausage-store > {{ .Values.postgresql.secrets }}/postgres-database
+              vault kv get -mount=kv -field=spring.datasource.username sausage-store > {{ .Values.global.secrets }}/postgres-username
+              vault kv get -mount=kv -field=spring.datasource.password sausage-store > {{ .Values.global.secrets }}/postgres-password
+              vault kv get -mount=kv -field=spring.datasource.database sausage-store > {{ .Values.global.secrets }}/postgres-database
       containers:
         - name: postgresql
           image: {{ .Values.postgresql.image }}
           imagePullPolicy: {{ .Values.global.imagePullPolicy }}
           env:
             - name: POSTGRES_PASSWORD_FILE
-              value: {{ .Values.postgresql.secrets }}/postgres-password
+              value: {{ .Values.global.secrets }}/postgres-password
             - name: POSTGRES_USER_FILE
-              value: {{ .Values.postgresql.secrets }}/postgres-username
+              value: {{ .Values.global.secrets }}/postgres-username
             - name: POSTGRES_DB_FILE
-              value: {{ .Values.postgresql.secrets }}/postgres-database
+              value: {{ .Values.global.secrets }}/postgres-database
             - name: PGDATA
               value: /var/lib/postgresql/data/pgdata
           ports:
@@ -61,7 +62,7 @@ spec:
             - name: postgresql-data
               mountPath: /var/lib/postgresql/data
             - name: postgresql-secrets
-              mountPath: {{ .Values.postgresql.secrets }}
+              mountPath: {{ .Values.global.secrets }}
               readOnly: true
       volumes:
         - name: postgresql-secrets

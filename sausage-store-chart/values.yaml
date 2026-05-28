@@ -1,5 +1,6 @@
 global:
   imagePullPolicy: Always
+  secrets: "/run/secrets"
   vault:
     image: "hashicorp/vault:1.21.0"
     addr: http://vault:8200
@@ -69,17 +70,27 @@ backend:
     updatePolicy: "InPlaceOrRecreate"
   ### Опишите VPA для бэкенда
 
-backend-report:
-### Опишите значения для backend-report
 ### Приложение должно использовать стратегию Recreate
-### Приложение использует переменную PORT - порт, на котором оно запустится и DB - Uri-подключение к mongodb. 
-### DB положите в Secret, PORT в ConfigMap
 ### Опишите HPA для backend-report
+backend-report:
+  image: itmo508541/sausage-backend-report:latest
+  containerPort: 8080
+  health: "/api/v1/health"
+  replicas: 1
+  strategy:
+    type: Recreate
+  resources:
+    container:
+      requests:
+        cpu: "200m"
+        memory: "128Mi"
+      limits:
+        cpu: "300m"
+        memory: "256Mi"
 
 infra:
   postgresql:
     image: postgres:16
-    secrets: "/run/secrets"
     containerPort: 5432
     resources:
       container:
@@ -94,7 +105,6 @@ infra:
           storage: 1Gi
   mongodb:
     image: mongo:7.0
-    secrets: "/run/secrets"
     containerPort: 27017
     resources:
       container:
