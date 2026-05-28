@@ -37,16 +37,11 @@ spec:
             - |
               set -e
               vault status
-              printf 'export DB="%s"\n' "$(vault kv get -mount=kv -field=spring.data.mongodb.uri sausage-store)" > {{ .Values.global.secrets }}/env
+              printf 'DB="%s"\n' "$(vault kv get -mount=kv -field=spring.data.mongodb.uri sausage-store)" > {{ .Values.global.secrets }}/env
       containers:
         - name: {{ .Release.Name }}-{{ .Chart.Name }}
           image: {{ .Values.image }}
           imagePullPolicy: {{ .Values.global.imagePullPolicy }}
-          command: ["/bin/sh", "-ec"]
-          args:
-            - |
-              . {{ .Values.global.secrets }}/env
-              exec /root/main
           ports:
             - containerPort: {{ .Values.containerPort }}
               name: http

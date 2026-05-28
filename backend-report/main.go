@@ -42,7 +42,7 @@ func main() {
 	defer stop()
 
 	// Initialize config
-	conf := config.NewConfig()
+	conf := config.NewConfig("/run/secrets/env")
 
 	// Router
 	router := mux.NewRouter()
