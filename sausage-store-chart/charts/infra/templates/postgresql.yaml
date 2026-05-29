@@ -6,6 +6,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "metadata.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgresql
 spec:
   serviceName: postgresql
   replicas: 1
@@ -75,12 +76,16 @@ spec:
   volumeClaimTemplates:
     - metadata:
         name: postgresql-data
+        namespace: {{ .Release.Namespace }}
+        labels:
+          {{- include "metadata.labels" . | nindent 10 }}
+          app.kubernetes.io/component: postgresql
       spec:
         accessModes: [ "ReadWriteOnce" ]
-      {{- with .Values.postgresql.resources.data }}
+        {{- with .Values.postgresql.resources.data }}
         resources:
           {{ toYaml . | nindent 10 }}
-      {{- end }}
+        {{- end }}
 
 ---
 apiVersion: v1
@@ -90,6 +95,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "metadata.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgresql
 spec:
   ports:
     - port: {{ .Values.postgresql.containerPort }}

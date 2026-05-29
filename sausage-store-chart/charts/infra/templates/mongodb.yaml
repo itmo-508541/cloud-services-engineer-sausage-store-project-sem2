@@ -6,6 +6,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "metadata.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mongodb
 spec:
   serviceName: mongodb
   replicas: 1
@@ -70,6 +71,10 @@ spec:
   volumeClaimTemplates:
     - metadata:
         name: mongodb-data
+        namespace: {{ .Release.Namespace }}
+        labels:
+          {{- include "metadata.labels" . | nindent 10 }}
+          app.kubernetes.io/component: mongodb
       spec:
         accessModes: [ "ReadWriteOnce" ]
         {{- with .Values.mongodb.resources.data }}
@@ -85,10 +90,11 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "metadata.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mongodb
 spec:
   ports:
-  - port: {{ .Values.mongodb.containerPort }}
-    targetPort: {{ .Values.mongodb.containerPort }}
+    - port: {{ .Values.mongodb.containerPort }}
+      targetPort: {{ .Values.mongodb.containerPort }}
   selector:
     {{- include "selector.labels" . | nindent 4 }}
     app.kubernetes.io/component: mongodb
