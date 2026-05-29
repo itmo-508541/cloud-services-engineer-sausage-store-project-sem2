@@ -39,3 +39,9 @@ kubectl get deployment/sausage-store-backend
 kubectl exec -it deployment/sausage-store-backend -c sausage-store-backend -- \
     env
 ```
+
+**Frontend**
+
+```bash
+kubectl get deployment/sausage-store-frontend
+```

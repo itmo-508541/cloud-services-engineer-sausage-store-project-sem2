@@ -17,7 +17,6 @@ global:
           memory: "256Mi"
 
 frontend:
-### В чарте frontend отсутствуют некоторые важные файлы. Поймите какие и опишите их.
   replicas: 1
   revisionHistoryLimit: 15
   strategy:
@@ -25,18 +24,20 @@ frontend:
   service:
     port: 80
   ingress:
-    host: YOUR_STUDENT_HOSTNAME.students-projects.ru # Корректный домен будет указан в задании
+    host: front-amindubaev.2sem.students-projects.ru
+    tlsSecretName: 2sem-students-projects-wildcard-secret
     path: /
     pathType: Prefix
   containerPort: 80
-  image: YOUR_DOCKERHUB/sausage-frontend:latest
+  image: itmo508541/sausage-frontend:latest
   resources:
-    requests:
-      memory: "128Mi"
-      cpu: "100m"
-    limits:
-      memory: "128Mi"
-      cpu: "800m"
+    container:
+      requests:
+        memory: "64Mi"
+        cpu: "100m"
+      limits:
+        memory: "128Mi"
+        cpu: "200m"
   nginxConf: nginx.conf
 
 backend:
