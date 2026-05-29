@@ -104,6 +104,10 @@ backend-report:
       limits:
         cpu: "300m"
         memory: "256Mi"
+  hpa:
+    minReplicas: 1
+    maxReplicas: 2
+    averageUtilization: 75
 
 infra:
   postgresql:
