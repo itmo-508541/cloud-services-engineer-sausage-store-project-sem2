@@ -3,6 +3,9 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ .Release.Name }}-{{ .Chart.Name }}-ingress
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "metadata.labels" . | nindent 4 }}
 spec:
   ingressClassName: "nginx"
   tls:

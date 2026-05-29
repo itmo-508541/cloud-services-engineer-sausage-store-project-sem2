@@ -54,3 +54,30 @@ vault token create -policy=sausage-store-read -ttl=768h
 ```bash
 kubectl delete all,pvc,secret,configmap,ingress,vpa,hpa --all
 ```
+
+## Проверка квот
+
+```bash
+kubectl describe resourcequota
+```
+
+Использование квот после деплоя суб-чарта frontend:
+
+```plain
+Name:                   r-devops-magistracy-project-2sem-1130000019267475-quota
+Namespace:              r-devops-magistracy-project-2sem-1130000019267475
+Resource                Used    Hard
+--------                ----    ----
+configmaps              4       10
+limits.cpu              2100m   3
+limits.memory           1664Mi  2500Mi
+persistentvolumeclaims  3       4
+pods                    6       10
+requests.cpu            800m    2
+requests.memory         832Mi   1000Mi
+requests.storage        2560Mi  5Gi
+secrets                 6       10
+services                5       7
+services.loadbalancers  0       0
+services.nodeports      0       0
+```

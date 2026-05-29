@@ -3,17 +3,20 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ .Release.Name }}-{{ .Chart.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "metadata.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicas }}
   strategy:
     type: {{ .Values.strategy.type }}
   selector:
     matchLabels:
-      app: {{ .Release.Name }}-{{ .Chart.Name }}
+      {{- include "selector.labels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app: {{ .Release.Name }}-{{ .Chart.Name }}
+        {{- include "selector.labels" . | nindent 8 }}
     spec:
       initContainers:
         - name: {{ .Release.Name }}-{{ .Chart.Name }}-vault-secrets

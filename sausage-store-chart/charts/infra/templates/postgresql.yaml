@@ -3,16 +3,21 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: postgresql
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "metadata.labels" . | nindent 4 }}
 spec:
   serviceName: postgresql
   replicas: 1
   selector:
     matchLabels:
-      app: postgresql
+      {{- include "selector.labels" . | nindent 6 }}
+      app.kubernetes.io/component: postgresql
   template:
     metadata:
       labels:
-        app: postgresql
+        {{- include "selector.labels" . | nindent 8 }}
+        app.kubernetes.io/component: postgresql
     spec:
       initContainers:
         - name: postgresql-vault-secrets
@@ -82,12 +87,14 @@ apiVersion: v1
 kind: Service
 metadata:
   name: postgresql
+  namespace: {{ .Release.Namespace }}
   labels:
-    app: postgresql
+    {{- include "metadata.labels" . | nindent 4 }}
 spec:
   ports:
     - port: {{ .Values.postgresql.containerPort }}
       targetPort: {{ .Values.postgresql.containerPort }}
   selector:
-    app: postgresql
+    {{- include "selector.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgresql
   clusterIP: None
