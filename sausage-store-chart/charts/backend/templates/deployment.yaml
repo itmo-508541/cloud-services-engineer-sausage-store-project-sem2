@@ -83,5 +83,7 @@ spec:
   updatePolicy:
     {{ toYaml .updatePolicy | nindent 4 }}
   resourcePolicy:
-    {{ toYaml .resourcePolicy | nindent 4 }}
+    containerPolicies:
+      - containerName: {{ $.Release.Name }}-{{ $.Chart.Name }}
+        {{ toYaml .containerPolicy | nindent 8 }}
   {{- end }}

@@ -75,19 +75,17 @@ backend:
   vpa:
     updatePolicy:
       updateMode: "Off"
-    resourcePolicy:
-      containerPolicies:
-        - containerName: "backend"
-          minAllowed:
-            memory: "256Mi"
-            cpu: "100m"
-          maxAllowed:
-            memory: "1Gi"
-            cpu: "1600m"
-          controlledResources:
-            - memory
-            - cpu
-          controlledValues: RequestsAndLimits
+    containerPolicy:
+      minAllowed:
+        memory: "256Mi"
+        cpu: "100m"
+      maxAllowed:
+        memory: "1Gi"
+        cpu: "1600m"
+      controlledResources:
+        - memory
+        - cpu
+      controlledValues: RequestsAndLimits
 
 ### Опишите HPA для backend-report
 backend-report:
