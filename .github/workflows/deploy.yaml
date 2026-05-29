@@ -123,4 +123,7 @@ jobs:
         run: |
           helm repo add nexus "${{ secrets.NEXUS_HELM_REPO }}" --username "${{ secrets.NEXUS_HELM_REPO_USER }}" --password "${{ secrets.NEXUS_HELM_REPO_PASSWORD }}"
           helm repo update
-          helm upgrade --install sausage-store nexus/sausage-store --set global.vault.token='${{ secrets.VAULT_TOKEN }}' --wait --timeout 10m
+          helm upgrade --install sausage-store nexus/sausage-store \
+            --set global.vault.token='${{ secrets.VAULT_TOKEN }}' \
+            --history-max 3 \
+            --wait --timeout 10m

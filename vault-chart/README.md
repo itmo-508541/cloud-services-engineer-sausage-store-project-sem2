@@ -23,13 +23,12 @@ vault secrets enable -path=kv kv-v2
 Заполнить необходимые для работы приложения значения
 
 ```sh
-
 vault kv put kv/sausage-store \
   spring.data.mongodb.uri="mongodb://mongodb:dbmongo@mongodb:27017/sausage-store?authSource=admin" \
-  spring.data.mongodb.username=mongodb \
-  spring.data.mongodb.password=dbmongo \
+  mongodb.init.username=mongodb \
+  mongodb.init.password=dbmongo \
   spring.datasource.url="jdbc:postgresql://postgresql:5432/store_default" \
-  spring.datasource.database=store_default \
+  postgresql.init.database=store_default \
   spring.datasource.username=postgres \
   spring.datasource.password=postgres
 
@@ -49,3 +48,9 @@ vault token create -policy=sausage-store-read -ttl=768h
 
 - `kubectl port-forward deploy/vault 8200:8200`
 - По адресу http://localhost:8200/ui/ будет UI
+
+## Начать всё заново
+
+```bash
+kubectl delete all,pvc,secret,configmap,ingress,vpa,hpa --all
+```

@@ -36,8 +36,8 @@ spec:
             - |
               set -e
               vault status
-              vault kv get -mount=kv -field=spring.data.mongodb.username sausage-store > {{ .Values.global.secrets }}/mongo-root-username
-              vault kv get -mount=kv -field=spring.data.mongodb.password sausage-store > {{ .Values.global.secrets }}/mongo-root-password
+              vault kv get -mount=kv -field=mongodb.init.username sausage-store > {{ .Values.global.secrets }}/mongo-root-username
+              vault kv get -mount=kv -field=mongodb.init.password sausage-store > {{ .Values.global.secrets }}/mongo-root-password
       containers:
         - name: mongodb
           image: {{ .Values.mongodb.image }}

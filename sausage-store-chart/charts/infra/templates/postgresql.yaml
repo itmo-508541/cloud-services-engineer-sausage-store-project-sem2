@@ -38,7 +38,7 @@ spec:
               vault status
               vault kv get -mount=kv -field=spring.datasource.username sausage-store > {{ .Values.global.secrets }}/postgres-username
               vault kv get -mount=kv -field=spring.datasource.password sausage-store > {{ .Values.global.secrets }}/postgres-password
-              vault kv get -mount=kv -field=spring.datasource.database sausage-store > {{ .Values.global.secrets }}/postgres-database
+              vault kv get -mount=kv -field=postgresql.init.database sausage-store > {{ .Values.global.secrets }}/postgres-database
       containers:
         - name: postgresql
           image: {{ .Values.postgresql.image }}
