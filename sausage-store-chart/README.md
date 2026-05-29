@@ -31,3 +31,11 @@ kubectl exec statefulset/mongodb -c mongodb -- \
     mongosh "mongodb://mongodb:dbmongo@127.0.0.1:27017/sausage-store?authSource=admin" \
     --quiet --eval 'db.reports.countDocuments()'
 ```
+
+**Backend**
+
+```bash
+kubectl get deployment/sausage-store-backend
+kubectl exec -it deployment/sausage-store-backend -c sausage-store-backend -- \
+    env
+```
