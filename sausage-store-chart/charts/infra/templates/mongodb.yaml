@@ -95,7 +95,7 @@ metadata:
   annotations:
     "helm.sh/hook": post-install
     "helm.sh/hook-weight": "10"
-    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
+    # "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
   labels:
     {{- include "metadata.labels" . | nindent 4 }}
     app.kubernetes.io/component: mongodb
@@ -140,7 +140,7 @@ spec:
 
               ready=false
               for i in $(seq 1 60); do
-                if mongosh --host "$HOST" --port "$PORT" -u "$ROOT_USER" -p "$ROOT_PASS"
+                if mongosh --host "$HOST" --port "$PORT" -u "$ROOT_USER" -p "$ROOT_PASS" \
                     --authenticationDatabase admin --quiet --eval 'db.adminCommand({ ping: 1 })'; then
                   ready=true
                   break
