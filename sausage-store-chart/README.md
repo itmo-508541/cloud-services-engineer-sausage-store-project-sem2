@@ -55,10 +55,6 @@ kubectl exec -it deployment/sausage-store-backend-report -c sausage-store-backen
 
 kubectl exec -it deployment/sausage-store-backend-report -c sausage-store-backend-report -- \
     env | grep CONFIG
-
-kubectl exec statefulset/mongodb -c mongodb -- \
-    mongosh "mongodb://mongodb:dbmongo@127.0.0.1:27017/sausage-store?authSource=admin" \
-    --quiet --eval 'db.reports.countDocuments()'
 ```
 
 **Backend**
