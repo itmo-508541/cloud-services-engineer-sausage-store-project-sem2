@@ -1,4 +1,4 @@
-# Chart
+# Чарт `sausage-store-chart`
 
 ## Проверка
 
