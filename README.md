@@ -1,4 +1,4 @@
-# Интернет-магазин «Сосисочная»
+# Интернет-магазин «[Сосисочная](https://front-amindubaev.2sem.students-projects.ru/)»
 
 ![image](https://user-images.githubusercontent.com/9394918/121517767-69db8a80-c9f8-11eb-835a-e98ca07fd995.png)
 
@@ -16,15 +16,9 @@ HashiCorp Vault должен быть установлен в текущем nam
 
 ## Деплой приложения
 
-Из локального окружения разработчика
-
-```bash
-helm upgrade --install sausage-store ./sausage-store-chart \
-  --history-max 3 \
-  --set global.vault.token='<token>'
-```
-
 После `git push origin main` приложение автоматически будет выложено в k8s кластер.
+
+- Для деплоя приложения и ручной проверки нужно воспользоваться [инструкцией](sausage-store-chart/README.md)
 
 ## Релиз новой версии приложения
 

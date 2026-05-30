@@ -44,6 +44,8 @@ EOF
 vault token create -policy=sausage-store-read -ttl=768h
 ```
 
+## Проверка
+
 **Веб-интерфейс:**
 
 - `kubectl port-forward deploy/vault 8200:8200`
