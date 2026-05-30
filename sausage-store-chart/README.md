@@ -25,7 +25,9 @@ kubectl exec -it statefulset/postgresql -c postgresql -- \
 ```bash
 kubectl get deployment/sausage-store-backend-report
 kubectl exec -it deployment/sausage-store-backend-report -c sausage-store-backend-report -- \
-    ls -la /run/secrets/
+    cat /run/secrets/env
+kubectl exec -it deployment/sausage-store-backend-report -c sausage-store-backend-report -- \
+    env
 
 kubectl exec statefulset/mongodb -c mongodb -- \
     mongosh "mongodb://mongodb:dbmongo@127.0.0.1:27017/sausage-store?authSource=admin" \

@@ -16,7 +16,7 @@ spec:
   template:
     metadata:
       labels:
-        {{- include "selector.labels" . | nindent 8 }}
+        {{- include "template.metadata.labels" . | nindent 8 }}
     spec:
       initContainers:
         - name: {{ .Release.Name }}-{{ .Chart.Name }}-vault-secrets

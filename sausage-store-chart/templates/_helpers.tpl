@@ -7,6 +7,11 @@ helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
 app.kubernetes.io/part-of: "{{ .Release.Name }}"
 {{- end }}
 
+{{- define "template.metadata.labels" }}
+{{- include "selector.labels" . }}
+helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+{{- end }}
+
 {{- define "selector.labels" }}
 app.kubernetes.io/instance: "{{ .Release.Name }}"
 app.kubernetes.io/name: {{ .Chart.Name }}

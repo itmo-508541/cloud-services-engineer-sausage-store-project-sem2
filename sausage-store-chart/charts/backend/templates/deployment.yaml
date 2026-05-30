@@ -21,7 +21,7 @@ spec:
         prometheus.io/port: "{{ .Values.annotations.port }}"
         prometheus.io/scrape: "{{ .Values.annotations.scrape }}"
       labels:
-        {{- include "selector.labels" . | nindent 8 }}
+        {{- include "template.metadata.labels" . | nindent 8 }}
     spec:
       containers:
         - name: {{ .Release.Name }}-{{ .Chart.Name }}
