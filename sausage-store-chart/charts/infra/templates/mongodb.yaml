@@ -21,22 +21,7 @@ spec:
         app.kubernetes.io/component: mongodb
     spec:
       initContainers:
-        - name: mongodb-vault-secrets
-          image: {{ .Values.global.vault.image }}
-          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
-          env:
-            - name: VAULT_ADDR
-              value: {{ .Values.global.vault.addr | quote }}
-            - name: VAULT_TOKEN
-              value: {{ .Values.global.vault.token | quote }}
-          {{- with .Values.global.vault.resources.container }}
-          resources:
-            {{ toYaml . | nindent 12 }}
-          {{- end }}
-          volumeMounts:
-            - name: mongodb-secrets
-              mountPath: {{ .Values.global.secrets }}
-          command:
+        - command:
             - sh
             - -c
             - |
@@ -44,6 +29,7 @@ spec:
               vault status
               vault kv get -mount=kv -field=mongodb.init.username sausage-store > {{ .Values.global.secrets }}/mongo-root-username
               vault kv get -mount=kv -field=mongodb.init.password sausage-store > {{ .Values.global.secrets }}/mongo-root-password
+          {{- include "vault.init.container" . | nindent 10 }}
       containers:
         - name: mongodb
           image: {{ .Values.mongodb.image }}
@@ -60,13 +46,13 @@ spec:
             {{ toYaml . | nindent 12 }}
           {{- end }}
           volumeMounts:
-          - name: mongodb-data
-            mountPath: /data/db
-          - name: mongodb-secrets
-            mountPath: {{ .Values.global.secrets }}
-            readOnly: true
+            - name: mongodb-data
+              mountPath: /data/db
+            - name: {{ .Values.global.vault.volume }}
+              mountPath: {{ .Values.global.secrets }}
+              readOnly: true
       volumes:
-        - name: mongodb-secrets
+        - name: {{ .Values.global.vault.volume }}
           emptyDir: {}
   volumeClaimTemplates:
     - metadata:
@@ -99,3 +85,97 @@ spec:
     {{- include "selector.labels" . | nindent 4 }}
     app.kubernetes.io/component: mongodb
   clusterIP: None
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mongodb-init
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "10"
+    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
+  labels:
+    {{- include "metadata.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mongodb
+spec:
+  backoffLimit: 5
+  template:
+    metadata:
+      labels:
+        {{- include "template.metadata.labels" . | nindent 8 }}
+        app.kubernetes.io/component: mongodb
+    spec:
+      restartPolicy: Never
+      initContainers:
+        - command:
+            - sh
+            - -c
+            - |
+              set -e
+              vault status
+              vault kv get -mount=kv -field=mongodb.init.username sausage-store > {{ .Values.global.secrets }}/mongo-root-username
+              vault kv get -mount=kv -field=mongodb.init.password sausage-store > {{ .Values.global.secrets }}/mongo-root-password
+              vault kv get -mount=kv -field=spring.data.mongodb.database sausage-store > {{ .Values.global.secrets }}/mongo-database
+              vault kv get -mount=kv -field=spring.data.mongodb.username sausage-store > {{ .Values.global.secrets }}/mongo-username
+              vault kv get -mount=kv -field=spring.data.mongodb.password sausage-store > {{ .Values.global.secrets }}/mongo-password
+          {{- include "vault.init.container" . | nindent 10 }}
+      containers:
+        - name: create-user-and-database
+          image: {{ .Values.mongodb.image }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          command: ["sh", "-c"]
+          args:
+            - |
+              set -e
+              SECRETS="{{ .Values.global.secrets }}"
+              ROOT_USER=$(cat "$SECRETS/mongo-root-username")
+              ROOT_PASS=$(cat "$SECRETS/mongo-root-password")
+              DB=$(cat "$SECRETS/mongo-database")
+              APP_USER=$(cat "$SECRETS/mongo-username")
+              APP_PASS=$(cat "$SECRETS/mongo-password")
+              HOST="mongodb"
+              PORT="{{ .Values.mongodb.containerPort }}"
+
+              ready=false
+              for i in $(seq 1 60); do
+                if mongosh --host "$HOST" --port "$PORT" -u "$ROOT_USER" -p "$ROOT_PASS"
+                    --authenticationDatabase admin --quiet --eval 'db.adminCommand({ ping: 1 })'; then
+                  ready=true
+                  break
+                fi
+                echo "waiting for mongodb... ($i/60)"
+                sleep 5
+              done
+              if [ "$ready" != true ]; then
+                echo "mongodb not ready after auth ping to $HOST:$PORT" >&2
+                exit 1
+              fi
+
+              mongosh --host "$HOST" --port "$PORT" \
+                -u "$ROOT_USER" -p "$ROOT_PASS" --authenticationDatabase admin --quiet <<EOF
+                  const dbName = '$DB';
+                  const appUser = '$APP_USER';
+                  const appPass = '$APP_PASS';
+                  const target = db.getSiblingDB(dbName);
+
+                  if (!target.getUser(appUser)) {
+                    target.createUser({
+                      user: appUser,
+                      pwd: appPass,
+                      roles: [{ role: 'readWrite', db: dbName }]
+                    });
+                  }
+              EOF
+          {{- with .Values.mongodb.resources.container }}
+          resources:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: {{ .Values.global.vault.volume }}
+              mountPath: {{ .Values.global.secrets }}
+              readOnly: true
+      volumes:
+        - name: {{ .Values.global.vault.volume }}
+          emptyDir: {}

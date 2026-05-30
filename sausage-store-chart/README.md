@@ -16,8 +16,22 @@ helm upgrade --install sausage-store ./sausage-store-chart \
 kubectl get pod -l app.kubernetes.io/component=mongodb
 kubectl get statefulset mongodb
 
-kubectl exec -it statefulset/mongodb -c mongodb -- \
-    mongosh -u mongodb -p dbmongo --authenticationDatabase admin --eval "db.adminCommand({ ping: 1 })"
+kubectl exec -it statefulset/mongodb -c mongodb -- sh -c \
+  'mongosh -u "$(cat /run/secrets/mongo-root-username)" \
+    -p "$(cat /run/secrets/mongo-root-password)" \
+    --authenticationDatabase admin --eval \
+    "db.adminCommand({ ping: 1 })"'
+
+kubectl exec statefulset/mongodb -c mongodb -- sh -c \
+  'mongosh -u "$(cat /run/secrets/mongo-root-username)" \
+    -p "$(cat /run/secrets/mongo-root-password)" \
+    --authenticationDatabase admin --eval \
+    "db.getSiblingDB(\"sausage-store\").getUser(\"mngdbuser\")"'
+
+kubectl exec statefulset/mongodb -c mongodb -- sh -c \
+  'mongosh -u mngdbuser -p mngdbpsw1 \
+    --authenticationDatabase sausage-store --eval \
+    "db.runCommand({ ping: 1 })"'
 ```
 
 **PostgreSQL**
