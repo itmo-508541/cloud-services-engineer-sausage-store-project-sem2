@@ -71,6 +71,8 @@ jobs:
           context: ./backend-report/
           push: true
           tags: itmo508541/sausage-backend-report:latest
+          build-args: |
+            CONFIG=/run/secrets/env
           cache-from: type=registry,ref=itmo508541/sausage-backend-report:latest
           cache-to: type=registry,ref=itmo508541/sausage-backend-report:cache,mode=max
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os"
 	"os/signal"
 	"sync"
 	"syscall"
@@ -42,7 +43,12 @@ func main() {
 	defer stop()
 
 	// Initialize config
-	conf := config.NewConfig("/run/secrets/env")
+
+	configPath := os.Getenv("CONFIG")
+	if configPath == "" {
+		configPath = ".env"
+	}
+	conf := config.NewConfig(configPath)
 
 	// Router
 	router := mux.NewRouter()
