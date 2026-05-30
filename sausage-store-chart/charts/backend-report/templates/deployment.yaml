@@ -19,28 +19,20 @@ spec:
         {{- include "template.metadata.labels" . | nindent 8 }}
     spec:
       initContainers:
-        - name: {{ .Release.Name }}-{{ .Chart.Name }}-vault-secrets
-          image: {{ .Values.global.vault.image }}
-          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
-          env:
-            - name: VAULT_ADDR
-              value: {{ .Values.global.vault.addr | quote }}
-            - name: VAULT_TOKEN
-              value: {{ .Values.global.vault.token | quote }}
-          {{- with .Values.global.vault.resources.container }}
-          resources:
-            {{ toYaml . | nindent 12 }}
-          {{- end }}
-          volumeMounts:
-            - name: {{ .Release.Name }}-{{ .Chart.Name }}-secrets
-              mountPath: {{ .Values.global.secrets }}
-          command:
+        - command:
             - sh
             - -c
             - |
               set -e
               vault status
-              printf 'DB="%s"\n' "$(vault kv get -mount=kv -field=spring.data.mongodb.uri sausage-store)" > {{ .Values.global.secrets }}/env
+              printf 'DB="mongodb://%s:%s@%s:%s/%s"\n' \
+                "$(vault kv get -mount=kv -field=spring.data.mongodb.username sausage-store)" \
+                "$(vault kv get -mount=kv -field=spring.data.mongodb.password sausage-store)" \
+                "$(vault kv get -mount=kv -field=spring.data.mongodb.host sausage-store)" \
+                "$(vault kv get -mount=kv -field=spring.data.mongodb.port sausage-store)" \
+                "$(vault kv get -mount=kv -field=spring.data.mongodb.database sausage-store)" \
+                > {{ .Values.global.secrets }}/env
+          {{- include "vault.init.container" . | nindent 10 }}
       containers:
         - name: {{ .Release.Name }}-{{ .Chart.Name }}
           image: {{ .Values.image }}
@@ -71,9 +63,9 @@ spec:
             {{ toYaml . | nindent 12 }}
           {{- end }}
           volumeMounts:
-            - name: {{ .Release.Name }}-{{ .Chart.Name }}-secrets
+            - name: vault-secrets
               mountPath: {{ .Values.global.secrets }}
               readOnly: true
       volumes:
-        - name: {{ .Release.Name }}-{{ .Chart.Name }}-secrets
+        - name: vault-secrets
           emptyDir: {}

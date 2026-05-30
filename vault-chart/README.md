@@ -24,9 +24,13 @@ vault secrets enable -path=kv kv-v2
 
 ```sh
 vault kv put kv/sausage-store \
-  spring.data.mongodb.uri="mongodb://mongodb:dbmongo@mongodb:27017/sausage-store?authSource=admin" \
-  mongodb.init.username=mongodb \
-  mongodb.init.password=dbmongo \
+  spring.data.mongodb.host=mongodb \
+  spring.data.mongodb.port=27017 \
+  spring.data.mongodb.database=sausage-store \
+  spring.data.mongodb.username=mngdbuser \
+  spring.data.mongodb.password=mngdbpsw1 \
+  mongodb.init.username=mngdbroot \
+  mongodb.init.password=mngdbpsw2 \
   spring.datasource.url="jdbc:postgresql://postgresql:5432/store_default" \
   postgresql.init.database=store_default \
   spring.datasource.username=postgres \
