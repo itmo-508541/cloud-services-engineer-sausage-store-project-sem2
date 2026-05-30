@@ -107,7 +107,7 @@ backend-report:
         memory: "256Mi"
   hpa:
     minReplicas: 1
-    maxReplicas: 2
+    maxReplicas: 5
     averageUtilization: 75
 
 infra:
