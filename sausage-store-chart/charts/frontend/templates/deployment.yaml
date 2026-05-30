@@ -20,7 +20,7 @@ spec:
         {{- include "template.metadata.labels" . | nindent 8 }}
     spec:
       containers:
-        - name: {{ .Chart.Name }}
+        - name: {{ .Release.Name }}-{{ .Chart.Name }}
           image: {{ .Values.image }}
           imagePullPolicy: {{ .Values.global.imagePullPolicy }}
           {{- with .Values.resources.container }}
