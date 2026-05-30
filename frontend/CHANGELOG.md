@@ -1,0 +1,21 @@
+# Changelog
+
+Все заметные изменения в этом проекте будут задокументированы в этом файле.
+
+Формат файла основан на [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/), этот проект придерживается [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+<!-- Изменения -->
+
+## [0.1.1]
+
+### Added
+
+- Добавлен [Dockerfile](Dockerfile) для сборки образа
+
+## [0.1.0]
+
+### Added
+
+- Добавлены файлы финального задания
