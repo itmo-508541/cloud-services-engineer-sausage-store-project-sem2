@@ -29,9 +29,12 @@ kubectl exec statefulset/mongodb -c mongodb -- sh -c \
     "db.getSiblingDB(\"sausage-store\").getUser(\"mngdbuser\")"'
 
 kubectl exec statefulset/mongodb -c mongodb -- sh -c \
-  'mongosh -u mngdbuser -p mngdbpsw1 \
-    --authenticationDatabase sausage-store --eval \
-    "db.runCommand({ ping: 1 })"'
+  'mongosh -u mngdbuser -p mngdbpsw1 sausage-store \
+    --eval "db.runCommand({ ping: 1 })"'
+
+kubectl exec statefulset/mongodb -c mongodb -- sh -c \
+  'mongosh -u mngdbuser -p mngdbpsw1 sausage-store \
+    --eval "db.reports.countDocuments()"'
 ```
 
 **PostgreSQL**
