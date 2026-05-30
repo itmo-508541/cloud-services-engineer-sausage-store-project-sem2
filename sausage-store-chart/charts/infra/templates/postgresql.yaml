@@ -21,22 +21,7 @@ spec:
         app.kubernetes.io/component: postgresql
     spec:
       initContainers:
-        - name: postgresql-vault-secrets
-          image: {{ .Values.global.vault.image }}
-          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
-          env:
-            - name: VAULT_ADDR
-              value: {{ .Values.global.vault.addr | quote }}
-            - name: VAULT_TOKEN
-              value: {{ .Values.global.vault.token | quote }}
-          {{- with .Values.global.vault.resources.container }}
-          resources:
-            {{ toYaml . | nindent 12 }}
-          {{- end }}
-          volumeMounts:
-            - name: postgresql-secrets
-              mountPath: {{ .Values.global.secrets }}
-          command:
+        - command:
             - sh
             - -c
             - |
@@ -45,6 +30,7 @@ spec:
               vault kv get -mount=kv -field=spring.datasource.username sausage-store > {{ .Values.global.secrets }}/postgres-username
               vault kv get -mount=kv -field=spring.datasource.password sausage-store > {{ .Values.global.secrets }}/postgres-password
               vault kv get -mount=kv -field=postgresql.init.database sausage-store > {{ .Values.global.secrets }}/postgres-database
+          {{- include "vault.init.container" . | nindent 10 }}
       containers:
         - name: postgresql
           image: {{ .Values.postgresql.image }}
@@ -67,11 +53,11 @@ spec:
           volumeMounts:
             - name: postgresql-data
               mountPath: /var/lib/postgresql/data
-            - name: postgresql-secrets
+            - name: vault-secrets
               mountPath: {{ .Values.global.secrets }}
               readOnly: true
       volumes:
-        - name: postgresql-secrets
+        - name: vault-secrets
           emptyDir: {}
   volumeClaimTemplates:
     - metadata:
