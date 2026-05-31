@@ -53,11 +53,11 @@ spec:
           volumeMounts:
             - name: postgresql-data
               mountPath: /var/lib/postgresql/data
-            - name: vault-secrets
+            - name: {{ .Values.global.vault.volume }}
               mountPath: {{ .Values.global.secrets }}
               readOnly: true
       volumes:
-        - name: vault-secrets
+        - name: {{ .Values.global.vault.volume }}
           emptyDir: {}
   volumeClaimTemplates:
     - metadata:
